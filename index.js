@@ -7,7 +7,7 @@ const io = new Server(server);
 const cors = require("cors");
 const mongoose = require("mongoose");
 const axios = require("axios");
-
+const port = process.env.PORT || 4002;
 const dayjs = require("dayjs");
 
 app.use(express.json()); // for parsing application/json
@@ -26,6 +26,6 @@ mongoose
 require("./routes/auth")(app, "/api");
 require("./routes/vote")(app, "/api");
 require("./routes/user")(app, "/api");
-server.listen(4002, () => {
-  console.log("listening on *:4002");
+server.listen(port, () => {
+  console.log(`listening  at : ${port} `);
 });
