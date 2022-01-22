@@ -54,15 +54,9 @@ exports.removeUser_delete = async (req, res) => {
 exports.updateUser_patch = async (req, res) => {
   console.log("idd", req.params.id);
   try {
-    const id = req.params.id;
-    const user = await User.findById(id);
-    console.log(user);
-    if (user.cinId === req.body.cinId) {
-      return res.status(500).send({
-        message: "Cin exist",
-        success: false,
-      });
-    }
+    const userCin = await User.findById(req.params.id);
+
+    const cinSearched = await User.findOne({ cinId: req.body.cinId });
 
     const newUpdate = {
       firstName: req.body.firstName,
@@ -70,25 +64,44 @@ exports.updateUser_patch = async (req, res) => {
       cinId: req.body.cinId,
       roles: req.body.roles,
     };
-    await User.updateOne({ _id: req.params.id }, { $set: newUpdate }).then(
-      (data) => {
-        if (data) {
-          return res.status(201).send({
-            message: "user updated",
-            success: true,
-          });
-        }
+    if (!userCin) {
+      console.log("first =======>");
+      return res.status(404).send({
+        message: "not found user",
+        success: true,
+      });
+    }
 
-        // await User.findByIdAndUpdate({ _id: id, newUpdate }).then((data) => {
-        //   if (data) {
-        //     return res.status(201).send({
-        //       message: "user updated",
-        //       success: true,
-        //     });
-        //   }
-        // });
-      }
-    );
+    if (!cinSearched) {
+      console.log("here =======>");
+      await User.updateOne({ _id: req.params.id }, { $set: newUpdate }).then(
+        (data) => {
+          if (data) {
+            return res.status(201).send({
+              message: "user updated",
+              success: true,
+            });
+          }
+        }
+      );
+    }
+
+    if (
+      userCin.cinId === cinSearched.cinId &&
+      cinSearched._id.toString() === req.params.id
+    ) {
+      console.log("seconddd =======>");
+      await User.updateOne({ _id: req.params.id }, { $set: newUpdate }).then(
+        (data) => {
+          if (data) {
+            return res.status(201).send({
+              message: "user updated succecs",
+              success: true,
+            });
+          }
+        }
+      );
+    }
   } catch (err) {
     return res.status(500).send({
       message: "An error occurred updating your profile :" + err,
@@ -96,6 +109,7 @@ exports.updateUser_patch = async (req, res) => {
     });
   }
 };
+
 exports.getUserById_get = async (req, res) => {
   try {
     const user = await User.findById({ _id: req.params.id });

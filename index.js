@@ -2,13 +2,10 @@ const express = require("express");
 const app = express();
 const http = require("http");
 const server = http.createServer(app);
-const { Server } = require("socket.io");
-const io = new Server(server);
 const cors = require("cors");
 const mongoose = require("mongoose");
-const axios = require("axios");
-const port = process.env.PORT || 4002;
-const dayjs = require("dayjs");
+const { Server } = require("socket.io");
+const io = new Server(server);
 
 app.use(express.json()); // for parsing application/json
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
@@ -26,6 +23,12 @@ mongoose
 require("./routes/auth")(app, "/api");
 require("./routes/vote")(app, "/api");
 require("./routes/user")(app, "/api");
-server.listen(port, () => {
-  console.log(`listening  at : ${port} `);
+server.listen(4002, () => {
+  console.log("listening on *:4002");
 });
+//socket
+io.on("connection", (socket) => {
+  console.log("a user connected");
+});
+
+require("./utils/socket")(io);

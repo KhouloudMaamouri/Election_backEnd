@@ -1,19 +1,28 @@
 const User = require("../models/User");
-
+const socketEvents = require("../utils/socket");
 exports.vote_patch = async (req, res) => {
   try {
     const user = await User.findOne({ cinId: req.body.cinId });
     if (user.isVoted) {
-      return res.status(200).send({
-        message: "user voted done",
+      return res.status(500).send({
+        message: "user has been voted ",
         success: false,
       });
     }
     if (!user.isVoted) {
-      const addVote = await User.findByIdAndUpdate(
+      const candidate = await User.findById(req.params.id);
+
+      const addVote = await User.findOneAndUpdate(
         { _id: req.params.id },
-        { $set: { totalVote: totalVote + 1 } }
+        { $set: { totalVote: candidate.totalVote + 1 } },
+        { new: true }
       );
+
+      const userWithRole = await User.find({
+        $or: [{ roles: "Candidature" }],
+      });
+      //socket fire
+      socketEvents.addvote(userWithRole);
       const elector = await User.findOneAndUpdate(
         { cinId: req.body.cinId },
         { isVoted: true }
@@ -25,7 +34,7 @@ exports.vote_patch = async (req, res) => {
     }
   } catch (err) {
     return res.status(500).send({
-      message: "Error occurred register" + err,
+      message: "Error occurred vote" + err,
       success: false,
     });
   }
